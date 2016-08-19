@@ -21,7 +21,7 @@ If you would like to download the code and try it for yourself:
 
 Features I would like to add, to make this into a production-worthy authentication system:
 
+* Email address verification
 * Throttle failed password retries
 * Change Password API and form
-* Reset Password workflow
-
+* Reset Password workflow (including throttling password reset requests)
