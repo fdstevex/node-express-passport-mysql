@@ -16,3 +16,12 @@ If you would like to download the code and try it for yourself:
 1. Create the database schema: `node scripts/create_database.js`
 1. Launch: `node server.js`
 1. Visit in your browser at: `http://localhost:8080`
+
+## Future
+
+Features I would like to add, to make this into a production-worthy authentication system:
+
+* Throttle failed password retries
+* Change Password API and form
+* Reset Password workflow
+
