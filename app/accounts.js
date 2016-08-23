@@ -30,8 +30,6 @@ module.exports = function(app, passport) {
 
 	// Register
 	router.post("/users", function(req, res) {
-		console.log("auth/login");
-
 		// Look for preconditions
 		if (!req.body) {
 			res.status(500).send({ status: 'error', message: "JSON body missing email or password"})

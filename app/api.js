@@ -7,7 +7,6 @@ module.exports = function(app, passport, accounts) {
 	router.use(bodyParser.json());
 
 	router.use(function(req, res, next) {
-		console.log(accounts);
 		if (!req.query.apikey) {
 			return res.status(403).send({status: 'fail', data: { message: 'missing apikey' }})
 		}

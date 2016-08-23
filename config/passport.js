@@ -36,7 +36,6 @@ module.exports = function(passport) {
       function(email, password, done) {
 
             connection.query("SELECT * FROM ?? WHERE email = ?",[dbconfig.users_table, email], function(err, rows){
-                console.log(rows);
                 if (err)
                     return done(err);
                 if (!rows.length) {
