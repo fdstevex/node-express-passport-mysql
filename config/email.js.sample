@@ -1,0 +1,30 @@
+var nodemailer = require('nodemailer');
+
+var config = {
+        host: 'smtp.mailgun.org',
+        port: 587,
+        auth: {
+            user: 'my_smtp_login',
+            pass: 'my_smtp_password'
+        },
+        debug: false,
+        logger: true
+    };
+
+var transporter = nodemailer.createTransport(config);
+
+// config/database.js
+module.exports = {
+    send: function(to, subject, body) {
+        var mailData = {
+            from: "noreply@my_domain", 
+            to: to, 
+            subject: subject,
+            text: body
+        };
+
+        transporter.sendMail(mailData, function(err, info) {
+            console.log("nodemailer error, err=" + JSON.stringify(err) + ", info=" + JSON.stringify(info));
+        });
+    }
+};

@@ -11,14 +11,11 @@ var app      = express();
 var port     = process.env.PORT || 8080;
 
 var passport = require('passport');
-var flash    = require('connect-flash');
 
 // configuration ===============================================================
 // connect to our database
 
 require('./config/passport')(passport); // pass passport for configuration
-
-
 
 // set up our express application
 app.use(morgan('dev')); // log every request to the console
@@ -28,22 +25,25 @@ app.use(bodyParser.urlencoded({
 }));
 app.use(bodyParser.json());
 
-app.set('view engine', 'ejs'); // set up ejs for templating
-
-// required for passport
-app.use(session({
-	secret: 'vidyapathaisalwaysrunning',
-	resave: true,
-	saveUninitialized: true
- } )); // session secret
 app.use(passport.initialize());
-app.use(passport.session()); // persistent login sessions
-app.use(flash()); // use connect-flash for flash messages stored in session
+var accounts = require("./app/accounts")(app, passport);
+app.use("/auth", accounts);
 
+function ensureAuthenticated(req, res, next) {
+  if (req.isAuthenticated())
+    return next();
+  else
+    return res.redirect("/");
+}
+
+app.use("/api", require("./app/api")(app, passport, accounts));
 
 // routes ======================================================================
 require('./app/routes.js')(app, passport); // load our routes and pass in our app and fully configured passport
 
+app.use(express.static('public'));
+
 // launch ======================================================================
 app.listen(port);
+
 console.log('The magic happens on port ' + port);

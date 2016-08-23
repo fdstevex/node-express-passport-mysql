@@ -3,8 +3,12 @@ module.exports = {
     'connection': {
         'host': 'localhost',
         'user': 'root',
-        'password': 'password'
+        'password': undefined
     },
-	'database': 'my_schema',
-    'users_table': 'users'
+	'database': 'expresso',
+    'users_table': 'accounts',
+
+    'require_email_verification': true,
+    'verify_link': "http://localhost:8080/auth/verify_email_address?token=",
+    'verified_redirect': '/'
 };
