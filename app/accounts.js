@@ -104,8 +104,38 @@ module.exports = function(app, passport) {
 		  }
 	);
 
-	router.post("/resetpass", function(req, res) {
+	router.post("/changepass", function(req, res) {
+		// The use is already authenticated, but we need to verify the password
+		// in the request
 
+		if (!req.query.apikey) {
+			return res.status(403).send({status: 'fail', data: { message: 'missing apikey' }})
+		}
+
+		router.userFromApikey(req.query.apikey, function(user) {
+			if (!user) {
+				return res.status(403).send({status: 'fail', data: { message: 'Invalid apikey'}});
+			}
+
+			if (!req.body.oldpass || !req.body.newpass) {
+				return res.status(403).send({status: 'fail', data: { message: 'oldpass and newpass must be specified'}});
+			}
+
+            if (!bcrypt.compareSync(req.body.oldpass, user.password)) {
+				return res.status(403).send({status: 'fail', data: { message: 'oldpass incorrect'}});
+            }
+
+			password = bcrypt.hashSync(req.body.newpass, null, null);
+			connection.query("UPDATE ?? SET password=? WHERE ??.id = ?",[dbconfig.users_table, password, dbconfig.users_table, user.id], function(err, rows) {
+				console.log(rows);
+
+				if (err || rows.changedRows != 1) {
+					return res.status(500).send({status: 'fail', data: { message: 'Password update request failed'}});
+				}
+
+				return res.send({status: 'success', data: null});
+		    });
+		});
 	});
 
 	return router;
