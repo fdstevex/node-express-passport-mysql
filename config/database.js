@@ -10,6 +10,5 @@ module.exports = {
 
     'require_email_verification': true,
     'verify_link': "http://localhost:8080/auth/verify_email_address?token=",
-    'resetpass_link': "http://localhost:8080/reset_password.html?token=",
-    'verified_redirect': '/'
+    'resetpass_link': "http://localhost:8080/reset_password.html?token="
 };

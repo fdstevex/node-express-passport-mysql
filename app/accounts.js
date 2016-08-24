@@ -126,8 +126,6 @@ module.exports = function(app, passport) {
 
 			password = bcrypt.hashSync(req.body.newpass, null, null);
 			connection.query("UPDATE ?? SET password=? WHERE ??.id = ?",[dbconfig.users_table, password, dbconfig.users_table, user.id], function(err, rows) {
-				console.log(rows);
-
 				if (err || rows.changedRows != 1) {
 					return res.status(500).send({status: 'fail', data: { message: 'Password update request failed'}});
 				}
