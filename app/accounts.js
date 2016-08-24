@@ -61,7 +61,7 @@ module.exports = function(app, passport) {
 
 	            connection.query(insertQuery,[dbconfig.users_table, email, password, verifyToken, new Date(), apikey],function(err, rows) {
 	            	if (err) {
-			            return res.json({ status: 'error', message: "Unexpected adding user"});
+			            return res.json({ status: 'error', message: "Unexpected error adding user"});
 	            	}
 
 	                mailer.send(email, "Email Verification", "Please click the link below to verify your email address.\r\n\r\n" + dbconfig.verify_link + verifyToken);
@@ -105,8 +105,7 @@ module.exports = function(app, passport) {
 	);
 
 	router.post("/changepass", function(req, res) {
-		// The use is already authenticated, but we need to verify the password
-		// in the request
+		// The use is already authenticated, but we need to verify the password in the request
 
 		if (!req.query.apikey) {
 			return res.status(403).send({status: 'fail', data: { message: 'missing apikey' }})
@@ -128,6 +127,80 @@ module.exports = function(app, passport) {
 			password = bcrypt.hashSync(req.body.newpass, null, null);
 			connection.query("UPDATE ?? SET password=? WHERE ??.id = ?",[dbconfig.users_table, password, dbconfig.users_table, user.id], function(err, rows) {
 				console.log(rows);
+
+				if (err || rows.changedRows != 1) {
+					return res.status(500).send({status: 'fail', data: { message: 'Password update request failed'}});
+				}
+
+				return res.send({status: 'success', data: null});
+		    });
+		});
+	});
+
+	// Send Reset Password email.
+	router.post("/sendresetpass", function(req, res) {
+		// Look for preconditions
+		if (!req.body) {
+			res.status(500).send({ status: 'error', message: "JSON body missing email or password"})
+			return;
+		}
+
+		var email = req.body.email;
+
+		if (!email) {
+			res.status(500).send({status: 'error', message: "missing email"})
+			return;
+		}
+
+	    connection.query("SELECT * FROM ?? WHERE email = ?",[dbconfig.users_table, email], function(err, rows) {
+	        if (err)
+	            return res.json({ status: 'error', message: "Unexpected error check for user"});
+	        if (rows.length != 1) {
+	            return res.status(404).json({ status: "fail", data: { code: 'notFound', message: "No user with that email address"}});
+	        } else {
+	        	// Generate a password reset token
+	        	var user = rows[0];
+
+	            token = require('crypto').randomBytes(32).toString('hex');
+
+	            var insertQuery = "UPDATE ?? SET reset_password_token=?, reset_password_token_generated=? WHERE id=?";
+
+	            connection.query(insertQuery,[dbconfig.users_table, token, new Date(), user.id],function(err, rows) {
+	            	if (err) {
+	            		console.log(err);
+			            return res.json({ status: 'error', message: "Unexpected error"});
+	            	}
+
+	                mailer.send(email, "Reset Password", "Please click the link below to change your password.  If you didn't request a password reset, you can ignore this message.\r\n\r\n" + dbconfig.resetpass_link + token);
+
+	                return res.json({ status: "success", data: null});
+	            });
+	        }
+	    });	
+	});
+
+	// Process the reset password request
+	router.post("/resetpass", function(req, res) {
+
+		var token = req.body.token;
+		var newpass = req.body.password;
+
+		if (!token || !newpass) {
+			res.status(400).send({status: 'fail', message: "password and token fields are required"})
+			return;
+		}
+
+		// The use is already authenticated, but we need to verify the password in the request
+	    connection.query("SELECT * FROM ?? WHERE reset_password_token = ?",[dbconfig.users_table, token], function(err, rows) {
+	        if (err)
+	            return res.status(500).json({ status: 'error', message: "Unexpected error checking for user"});
+	        if (rows.length != 1) {
+	            return res.status(404).json({ status: "fail", data: { code: 'notFound', message: "Unable to reset password. Password reset token may have expired."}});
+	        } 
+
+	        var user = rows[0];
+			password = bcrypt.hashSync(newpass, null, null);
+			connection.query("UPDATE ?? SET password=? WHERE ??.id = ?",[dbconfig.users_table, password, dbconfig.users_table, user.id], function(err, rows) {
 
 				if (err || rows.changedRows != 1) {
 					return res.status(500).send({status: 'fail', data: { message: 'Password update request failed'}});
